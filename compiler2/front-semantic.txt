@@ -306,6 +306,9 @@
                 {{ product.name }}
                 {{i}}
                   {{ "text" + 1 }}
+                  {{ loop }}
+                  {{ loop.index }}
+                  {{ loop.first }}
             </ul>
 
             <div class="add-section">

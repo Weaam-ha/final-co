@@ -18,7 +18,6 @@ public class SemanticAnalyzer {
     private final SymbolTable symbolTable;
     private final List<SemanticError> errors = new ArrayList<>();
     private final Set<String> definedVars = new HashSet<>();
-    private final Set<String> globalUniqueTags = new HashSet<>();
 
     // مصفوفات لتخزين أسطر البداية والنهاية لكل حلقات الـ for في الملف
     private final List<Integer> forStartLines = new ArrayList<>();
@@ -31,7 +30,6 @@ public class SemanticAnalyzer {
 
     public void analyze() {
         definedVars.clear();
-        globalUniqueTags.clear();
         errors.clear();
         forStartLines.clear();
         forEndLines.clear();
@@ -122,28 +120,8 @@ public class SemanticAnalyzer {
 
         } else if (node instanceof HtmlElementNode) {
             HtmlElementNode el = (HtmlElementNode) node;
-            String tagName = el.getTagName().toLowerCase();
 
-            if (tagName.equals("html") || tagName.equals("head") || tagName.equals("body")) {
-                if (globalUniqueTags.contains(tagName)) {
-                    addError("Duplicate Tag",
-                            "Duplicate critical HTML tag found: <" + tagName + "> can only appear once.",
-                            el.getLine());
-                } else {
-                    globalUniqueTags.add(tagName);
-                }
-            }
-
-            Set<String> seenAttributes = new HashSet<>();
             for (HtmlAttributeNode a : el.getAttributes()) {
-                String attrName = a.getName();
-                if (seenAttributes.contains(attrName)) {
-                    addError("Duplicate Attribute",
-                            "Attribute '" + attrName + "' is duplicated in element <" + el.getTagName() + ">.",
-                            a.getLine());
-                } else {
-                    seenAttributes.add(attrName);
-                }
                 performSemanticCheck(a);
             }
 
@@ -164,12 +142,24 @@ public class SemanticAnalyzer {
 
             if (t instanceof JinjaNumberNode) {
                 currentType = JType.NUMBER;
+
             } else if (t instanceof JinjaStringNode) {
                 currentType = JType.STRING;
+
+            } else if (t instanceof JinjaKeywordNode) {
+                String keyword = ((JinjaKeywordNode) t).getText();
+
+                if (keyword.equals("loop")) {
+                    if (!isLineInsideAnyFor(t.getLine())) {
+                        addError("Loop Outside For",
+                                "'loop' variable is used outside a 'for' loop.",
+                                t.getLine());
+                    }
+                }
+
             } else if (t instanceof JinjaIdentifierNode) {
                 String varName = ((JinjaIdentifierNode) t).getName();
 
-                //  الفحص الصارم القائم على أرقام الأسطر:
                 if (varName.equals("loop") || varName.startsWith("loop.")) {
                     if (!isLineInsideAnyFor(t.getLine())) { // لو السطر برات الـ for
                         addError("Loop Outside For",
@@ -191,7 +181,7 @@ public class SemanticAnalyzer {
                 if (prev instanceof JinjaTokenNode) op = ((JinjaTokenNode) prev).getText();
                 else if (prev instanceof JinjaOpNode) op = prev.getName();
 
-                if (op != null && (op.equals("+") || op.equals("-") || op.equals("*") || op.equals("/"))) {
+                if (op != null && (op.equals("+") || op.equals("-") || op.equals("*") || op.equals("/") || op.equals("%"))) {
                     if (lastType != JType.UNKNOWN && currentType != JType.UNKNOWN && lastType != currentType) {
                         addError("Type mismatch",
                                 "Cannot perform operation '" + op +
@@ -208,7 +198,7 @@ public class SemanticAnalyzer {
     }
 
     private void checkFlaskVariable(String name, int line) {
-        //  إضافة فحص الـ Scope Error هنا: إذا كان المتغير محلياً للـ for ولكن تم استدعاؤه خارج النطاق المسموح بالأسطر
+        //  إذا كان المتغير محلياً للـ for ولكن تم استدعاؤه خارج النطاق المسموح بالأسطر
         if (definedVars.contains(name)) {
             if (!isVariableInValidScope(name, line)) {
                 addError("Scope Error", "Variable '" + name + "' is out of scope (defined inside a loop).", line);
@@ -253,7 +243,6 @@ public class SemanticAnalyzer {
                     }
                 }
 
-                //  تعديل الـ Type Error ليطابق الـ PDF تماماً عند التكرار على قيم غير قابلة للتكرار (مثل int)
                 if (inIndex != -1 && inIndex + 1 < tokens.size()) {
                     Node iterableNode = tokens.get(inIndex + 1);
 
