@@ -1,0 +1,105 @@
+@app.route("/tc1-mismatch-string-plus-number")
+def tc1():
+    a = "hello"
+    b = 5
+    c = a + b
+
+@app.route("/tc2-mismatch-list-times-list")
+def tc2():
+    a = [1, 2]
+    b = [3, 4]
+    c = a * b
+
+@app.route("/tc3-mismatch-compare-string-lt-number")
+def tc3():
+    a = "hello"
+    b = 5
+    c = a < b
+
+@app.route("/tc4-typeerror-for-over-number")
+def tc4():
+    for i in 5:
+        pass
+
+@app.route("/tc5-typeerror-index-number")
+def tc5():
+    a = 5
+    b = a[0]
+
+@app.route("/tc6-typeerror-call-number")
+def tc6():
+    a = 5
+    b = a()
+
+@app.route("/tc7-typeerror-len-number")
+def tc7():
+    a = 5
+    b = len(a)
+
+@app.route("/tc8-typeerror-int-list")
+def tc8():
+    a = [1, 2]
+    b = int(a)
+
+@app.route("/tc9-typeerror-list-number")
+def tc9():
+    a = 5
+    b = list(a)
+
+@app.route("/tc10-typeerror-dict-number")
+def tc10():
+    a = 5
+    b = dict(a)
+
+@app.route("/tc11-typeerror-abs-string")
+def tc11():
+    a = "hello"
+    b = abs(a)
+
+@app.route("/tc13-scope-error-source")
+def tc13_source():
+    scoped_only_var = 10
+
+@app.route("/tc14-valid-no-errors")
+def tc14():
+    a = 5
+    b = 10
+    c = a + b
+    s1 = "foo"
+    s2 = "bar"
+    s3 = s1 + s2
+    items = [1, 2, 3]
+    first = items[0]
+    count = len(items)
+    return c
+
+@app.route("/tc15-valid-string-times-int")
+def tc15():
+    a = "ab"
+    b = 3
+    c = a * b
+
+@app.route("/tc16-valid-same-scope-reference")
+def tc16():
+    local_var = 42
+    doubled = local_var + local_var
+    return doubled
+
+@app.route("/tc17-augassign-mismatch-number-plus-string")
+def tc17():
+    x = 10
+    x += "hello"
+
+@app.route("/tc18-augassign-valid-number-plus-number")
+def tc18():
+    x = 10
+    x += 5
+    return x
+
+@app.route("/tc19-augassign-mismatch-list-times-string")
+def tc19():
+    lst = [1, 2]
+    lst *= "oops"
+
+print(scoped_only_var)
+print(never_defined_anywhere)

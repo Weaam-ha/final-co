@@ -1,0 +1,62 @@
+from flask import Flask, render_template, request, redirect, url_for
+
+app = Flask(__name__)
+
+products = [
+    {"id": 1, "name": "Laptop", "image": "https://picsum.photos/id/1/200/200", "details": "A powerful and modern laptop.", "price": 1200},
+    {"id": 2, "name": "Smartphone", "image": "https://picsum.photos/id/10/200/200", "details": "A smartphone with a great camera.", "price": 800},
+    {"id": 3, "name": "Headphones", "image": "https://picsum.photos/id/20/200/200", "details": "Noise-cancelling over-ear headphones.", "price": 250},
+]
+
+@app.route("/")
+def index():
+    return render_template("products.html", products=products)
+
+@app.route("/product/<int:product_id>")
+def show_product(product_id):
+    selected = None
+    for p in products:
+        if p["id"] == product_id:
+            selected = p
+            break
+    if selected is None:
+        return "Product not found", 404
+    return render_template("products.html", products=products, selected_product=selected)
+
+@app.route("/add", methods=["POST"])
+def add_product():
+    if products:
+        new_id = max(p["id"] for p in products) + 1
+    else:
+        new_id = 1
+
+    name = request.form.get("name")
+    details = request.form.get("details")
+    price = request.form.get("price", type=float, default=0.0)
+    image = request.form.get("image")
+
+    if not image:
+        image = "https://picsum.photos/id/100/200/200"
+
+    products.append({
+        "id": new_id,
+        "name": name,
+        "details": details,
+        "price": price,
+        "image": image
+    })
+    return redirect("/")
+
+@app.route("/delete", methods=["POST"])
+def delete_product():
+    global products
+    product_id = request.form.get("product_id", type=int)
+    updated_products = []
+    for p in products:
+        if p["id"] != product_id:
+            updated_products.append(p)
+    products = updated_products
+    return redirect("/")
+
+if __name__ == "__main__":
+    app.run(debug=True)
