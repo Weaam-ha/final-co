@@ -208,7 +208,7 @@ public class SemanticAnalyzer {
 
         if (symbolTable.isTemplateVariable(name)) return;
 
-        SymbolTable.Symbol sym = symbolTable.lookup(name);
+        SymbolTable.Symbol sym = symbolTable.lookupAnywhere(name);
 
         if (sym == null) {
             addError("Undefined variable", "Variable '" + name + "' is not defined.", line);
